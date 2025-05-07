@@ -6,10 +6,6 @@ clc;
 disp('Select .atf file');
 
 [filename, pathname] = uigetfile({'*.atf'}, 'Select trace file');
-if isequal(filename,0)
-    disp('User canceled file selection')
-    return
-end
 
 pathFile = fullfile(pathname, filename);
 a = importdata(pathFile, '\t', 11);
@@ -17,6 +13,20 @@ b = a.data(:,2:end);
 [r, ~] = size(b);
 sr = 10000; 
 t = (0:r-1)/sr;
+
+%%%%%%%%% RAW PLOT FOR VISUAL TIMING %%%%%%%%%
+figure;
+plot(t, b);
+title('Raw Data Preview - Use this to select baseline and drug timing');
+numTracesPreview = size(b, 2);
+text(0.95, 0.95, sprintf('Num Traces: %d', numTracesPreview), ...
+    'Units', 'normalized', 'HorizontalAlignment', 'right', ...
+    'VerticalAlignment', 'top', 'FontSize', 10, 'FontWeight', 'bold');
+xlabel('Time (s)');
+ylabel('pA');
+yline(0, '--k');
+grid on;
+
 
 % User inputs
 prompt = {'Baseline start (sec):','Baseline end (sec):',... 
@@ -150,6 +160,7 @@ annotation(gcf, 'textbox', [0.1 0.02 0.8 0.12], ...
 % --- Save figure ---
 saveas(hfig, fullfile(pathname, [filename(1:end-4) '_analysis_plot.jpg']));
 
+% --- Excel Export ---
 % --- Excel Export ---
 [excelfile, excelpath] = uiputfile('*.xlsx', 'Select or Create Excel file');
 if isequal(excelfile,0)
