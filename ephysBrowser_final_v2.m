@@ -130,6 +130,12 @@ xlabel('Conc (uM)'); ylabel('Response (pA)');
 
 sgtitle([mutationName ' - ' drugInfo]);
 
+
+% --- Save figure to file ---
+figName = [filename(1:end-4) '_analysis_plot.jpg'];
+saveas(hfig, fullfile(pathname, figName));
+disp(['🖼️ Figure saved as: ' fullfile(pathname, figName)]);
+
 % --- Output tables to MATLAB workspace ---
 
 T = table(conc(:), Z(:), Zss(:), ...
