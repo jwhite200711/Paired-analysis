@@ -156,6 +156,20 @@ annotation(gcf, 'textbox', [0.1 0.02 0.8 0.12], ...
     'EdgeColor', 'none', ...
     'Interpreter', 'none');
 
+% --- Create T and U variables for inspection in MATLAB
+T = table(conc(:), Z(:), Zss(:), ...
+    'VariableNames', {'Conc_uM', 'Peak_pA', 'SS_pA'});
+
+U = array2table([results_raw(:), resultsSS_raw(:)], ...
+    'RowNames', {'Bottom', 'Top', 'EC50', 'Hill'}, ...
+    'VariableNames', {'PeakFit', 'SSFit'});
+
+% Display in MATLAB variable viewer
+assignin('base', 'T', T);
+assignin('base', 'U', U);
+disp('📊 Variables T (response) and U (fit parameters) are available in your workspace.');
+
+
 
 % --- Save figure ---
 saveas(hfig, fullfile(pathname, [filename(1:end-4) '_analysis_plot.jpg']));
