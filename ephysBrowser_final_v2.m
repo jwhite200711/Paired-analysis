@@ -1,4 +1,3 @@
-function ephysBrowser_final
 % Final version with 6-panel figure and EC50 outputs to workspace (no normalization or Excel)
 
 clear;
@@ -132,8 +131,8 @@ xlabel('Conc (uM)'); ylabel('Response (pA)');
 sgtitle([mutationName ' - ' drugInfo]);
 
 % --- Output tables to MATLAB workspace ---
-T = table(conc(:), Z(:), Zss(:), ...
-    'VariableNames', {'Conc_uM', 'Peak_pA', 'SS_pA'});
+T = table(conc(:), Z(:), Zss(:), repmat({pathFile}, numTraces, 1), ...
+    'VariableNames', {'Conc_uM', 'Peak_pA', 'SS_pA', 'SourceFile'});
 
 U = array2table([results_raw(:), resultsSS_raw(:)], ...
     'RowNames', {'Bottom', 'Top', 'EC50', 'Hill'}, ...
@@ -141,4 +140,5 @@ U = array2table([results_raw(:), resultsSS_raw(:)], ...
 
 assignin('base', 'T', T);
 assignin('base', 'U', U);
-disp('📊 Variables T (response) and U (fit parameters) are available in your workspace.');
+disp(['📊 Variables T (response) and U (fit parameters) are available in your workspace.']);
+disp(['📂 Source file: ' pathFile]);
