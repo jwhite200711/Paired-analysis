@@ -1,5 +1,5 @@
 function ephysBrowser_final
-% Final version with 6-panel figure and full Excel export (raw + norm EC50s + responses)
+% Final version with 6-panel figure and EC50 outputs to workspace (no normalization or Excel)
 
 clear;
 clc;
@@ -26,7 +26,6 @@ xlabel('Time (s)');
 ylabel('pA');
 yline(0, '--k');
 grid on;
-
 
 % User inputs
 prompt = {'Baseline start (sec):','Baseline end (sec):',... 
@@ -87,17 +86,10 @@ Zss = abs(minBss);
 keep_idx_fit = 2:numTraces; % skip 0 uM
 c = conc(keep_idx_fit);
 zr = Z(keep_idx_fit);
-zn = zr / max(zr);
 zssr = Zss(keep_idx_fit);
-zssn = zssr / max(zssr);
-
-global flag
-flag = 1;
 
 results_raw = ec50(c', zr');
-results_norm = ec50(c', zn');
 resultsSS_raw = ec50(c', zssr');
-resultsSS_norm = ec50(c', zssn');
 
 % --- Plotting ---
 hfig = figure('Position', [100, 100, 1200, 1000]);
@@ -123,9 +115,7 @@ subplot(3,2,4); hold on;
 xFit = logspace(log10(min(c)), log10(max(c)), 100);
 semilogx(c, zr, 'ko-','MarkerFaceColor','k');
 semilogx(xFit, results_raw(1)+(results_raw(2)-results_raw(1))./(1+(results_raw(3)./xFit).^results_raw(4)), '-k');
-semilogx(c, zn * max(zr), 'o--','Color',[0.3 0.3 0.3]);
-semilogx(xFit, (results_norm(1)+(results_norm(2)-results_norm(1))./(1+(results_norm(3)./xFit).^results_norm(4))) * max(zr), '--','Color',[0.3 0.3 0.3]);
-title(sprintf('Peak EC50 Raw = %.1f uM, Norm = %.1f uM', results_raw(3), results_norm(3)));
+title(sprintf('Peak EC50 = %.1f uM', results_raw(3)));
 xlabel('Conc (uM)'); ylabel('Response (pA)');
 
 subplot(3,2,5); 
@@ -136,27 +126,12 @@ title(['Steady-State Dose Response - ' drugInfo]);
 subplot(3,2,6); hold on;
 semilogx(c, zssr, 'ko-','MarkerFaceColor','k');
 semilogx(xFit, resultsSS_raw(1)+(resultsSS_raw(2)-resultsSS_raw(1))./(1+(resultsSS_raw(3)./xFit).^resultsSS_raw(4)), '-k');
-semilogx(c, zssn * max(zssr), 'o--','Color',[0.3 0.3 0.3]);
-semilogx(xFit, (resultsSS_norm(1)+(resultsSS_norm(2)-resultsSS_norm(1))./(1+(resultsSS_norm(3)./xFit).^resultsSS_norm(4))) * max(zssr), '--','Color',[0.3 0.3 0.3]);
-title(sprintf('SS EC50 Raw = %.1f uM, Norm = %.1f uM', resultsSS_raw(3), resultsSS_norm(3)));
+title(sprintf('SS EC50 = %.1f uM', resultsSS_raw(3)));
 xlabel('Conc (uM)'); ylabel('Response (pA)');
 
 sgtitle([mutationName ' - ' drugInfo]);
 
-% === Annotate plot with response values === added jw
-annotationText = "Raw Peak (pA): " + join(string(round(zr, 1)), ", ") + newline + ...
-                 "Norm Peak: " + join(string(round(zn, 2)), ", ") + newline + ...
-                 "Raw SS (pA): " + join(string(round(zssr, 1)), ", ") + newline + ...
-                 "Norm SS: " + join(string(round(zssn, 2)), ", ");
-
-% Add annotation to figure (bottom left corner)
-annotation(gcf, 'textbox', [0.1 0.02 0.8 0.12], ...
-    'String', annotationText, ...
-    'FontSize', 9, ...
-    'EdgeColor', 'none', ...
-    'Interpreter', 'none');
-
-% --- Create T and U variables for inspection in MATLAB
+% --- Output tables to MATLAB workspace ---
 T = table(conc(:), Z(:), Zss(:), ...
     'VariableNames', {'Conc_uM', 'Peak_pA', 'SS_pA'});
 
@@ -164,63 +139,6 @@ U = array2table([results_raw(:), resultsSS_raw(:)], ...
     'RowNames', {'Bottom', 'Top', 'EC50', 'Hill'}, ...
     'VariableNames', {'PeakFit', 'SSFit'});
 
-% Display in MATLAB variable viewer
 assignin('base', 'T', T);
 assignin('base', 'U', U);
 disp('📊 Variables T (response) and U (fit parameters) are available in your workspace.');
-
-
-
-% --- Save figure ---
-saveas(hfig, fullfile(pathname, [filename(1:end-4) '_analysis_plot.jpg']));
-
-% --- Excel Export ---
-% --- Excel Export ---
-[excelfile, excelpath] = uiputfile('*.xlsx', 'Select or Create Excel file');
-if isequal(excelfile,0)
-    disp('User canceled Excel saving');
-    return
-end
-excelFullPath = fullfile(excelpath, excelfile);
-
-prompt_cell = {'Enter Cell ID (e.g., Cell 001):'};
-cell_info = inputdlg(prompt_cell, 'Cell Info', [1 50]);
-cellID = cell_info{1};
-
-summaryRow = {cellID, drugInfo, results_raw(3), results_norm(3), resultsSS_raw(3), resultsSS_norm(3)};
-dataMatrix = [c(:)'; zr(:)'; zn(:)'; zssr(:)'; zssn(:)'];
-dataVector = dataMatrix(:)';
-newRow = [summaryRow, num2cell(dataVector)];
-
-if isfile(excelFullPath)
-    oldData = readcell(excelFullPath);
-    rowIdxToKeep = ~strcmpi(oldData(:,1), 'Mean') & ~strcmpi(oldData(:,1), 'SEM');
-    oldData = oldData(rowIdxToKeep,:);
-    newData = [oldData; newRow];
-else
-    header = {'CellID', 'Drug', 'PeakEC50_Raw', 'PeakEC50_Norm', 'SS_EC50_Raw', 'SS_EC50_Norm'};
-    hdr_conc = {};
-    for i = 1:length(c)
-        hdr_conc = [hdr_conc, ...
-            {sprintf('Conc%d_uM', i)}, {sprintf('Peak%d', i)}, {sprintf('PeakNorm%d', i)}, ...
-            {sprintf('SS%d', i)}, {sprintf('SSNorm%d', i)}];
-    end
-    newData = [header, hdr_conc; newRow];
-end
-
-% Add Mean and SEM if multiple rows exist (excluding header)
-if size(newData,1) > 2  % header + ≥2 data rows
-    dataBlock = newData(2:end, 3:end); % skip CellID and Drug columns
-    dataBlockNumeric = cell2mat(dataBlock);
-
-    meanVals = mean(dataBlockNumeric, 1, 'omitnan');
-    semVals = std(dataBlockNumeric, 0, 1, 'omitnan') ./ sqrt(size(dataBlockNumeric,1));
-
-    newData = [newData;
-        [{'Mean'}, {''}, num2cell(meanVals)];
-        [{'SEM'}, {''}, num2cell(semVals)]];
-end
-
-% Write to Excel
-writecell(newData, excelFullPath);
-disp(['✅ Data + stats saved to: ' excelFullPath]);
