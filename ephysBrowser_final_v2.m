@@ -128,16 +128,18 @@ semilogx(xFit, resultsSS_raw(1)+(resultsSS_raw(2)-resultsSS_raw(1))./(1+(results
 title(sprintf('SS EC50 = %.1f uM', resultsSS_raw(3)));
 xlabel('Conc (uM)'); ylabel('Response (pA)');
 
-sgtitle([mutationName ' - ' drugInfo]);
+prompt_cell = {'Enter Cell ID (e.g., Cell 001):'};
+cell_info = inputdlg(prompt_cell, 'Cell Info', [1 50]);
+cellID = cell_info{1};
 
+sgtitle([cellID ' | ' mutationName ' - ' drugInfo]);
 
 % --- Save figure to file ---
 figName = [filename(1:end-4) '_analysis_plot.jpg'];
-saveas(hfig, fullfile(pathname, figName));
+imwrite(frame2im(getframe(hfig)), fullfile(pathname, figName));
 disp(['🖼️ Figure saved as: ' fullfile(pathname, figName)]);
 
 % --- Output tables to MATLAB workspace ---
-
 T = table(conc(:), Z(:), Zss(:), ...
     'VariableNames', {'Conc_uM', 'Peak_pA', 'SS_pA'});
 
