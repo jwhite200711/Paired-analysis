@@ -131,12 +131,28 @@ xlabel('Conc (uM)'); ylabel('Response (pA)');
 sgtitle([mutationName ' - ' drugInfo]);
 
 % --- Output tables to MATLAB workspace ---
-T = table(conc(:), Z(:), Zss(:), repmat({pathFile}, numTraces, 1), ...
-    'VariableNames', {'Conc_uM', 'Peak_pA', 'SS_pA', 'SourceFile'});
+
+T = table(conc(:), Z(:), Zss(:), ...
+    'VariableNames', {'Conc_uM', 'Peak_pA', 'SS_pA'});
+
+U_raw = results_raw(:);
+U_ss = resultsSS_raw(:);
+
+if numel(U_raw) < 4
+    U_raw(end+1:4) = NaN;
+end
+if numel(U_ss) < 4
+    U_ss(end+1:4) = NaN;
+end
 
 U = [U_raw, U_ss];  % Columns: [PeakFit, SSFit], Rows: [Bottom; Top; EC50; Hill]
 
 assignin('base', 'T', T);
 assignin('base', 'U', U);
 disp(['📊 Variables T (response) and U (fit parameters) are available in your workspace.']);
+V = pathFile;
+assignin('base', 'V', V);
 disp(['📂 Source file: ' pathFile]);
+openvar('T');
+openvar('U');
+openvar('V');
