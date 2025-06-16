@@ -1,5 +1,5 @@
 % Final version with 6-panel figure and EC50 outputs to workspace (no normalization or Excel)
-
+close all; clearvars; clc;
 clear;
 clc;
 disp('Select .atf file');
@@ -48,6 +48,25 @@ b = b(:, 1:numSweeps);
 prompt_conc = sprintf('Enter %d concentrations (uM), separated by spaces:', numSweeps);
 user_conc = inputdlg(prompt_conc, 'Input Concentrations', [1 70]);
 conc = str2num(user_conc{1});
+
+% === Ask user for EC50 fitting mode ===
+flagChoice = questdlg('Which EC50 fitting mode do you want to use?', ...
+    'Choose sigmoid fit direction', ...
+    '1 = Agonist (↑)', '2 = Antagonist (↓)', '1 = Agonist (↑)');
+
+switch flagChoice
+    case '1 = Agonist (↑)'
+        flag = 1;
+    case '2 = Antagonist (↓)'
+        flag = 2;
+    otherwise
+        flag = 1;  % default fallback
+end
+
+global flag
+
+
+
 if length(conc) ~= numSweeps
     error('Mismatch between # of sweeps and # of concentrations.');
 end
