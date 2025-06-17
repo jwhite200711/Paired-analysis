@@ -82,7 +82,7 @@ end
 Z = abs(minB);
 Zss = abs(minBss);
 
-keep_idx_fit = 2:numTraces; % skip 0 uM
+keep_idx_fit = 1:numTraces; % keep all
 c = conc(keep_idx_fit);
 zr = Z(keep_idx_fit);
 zssr = Zss(keep_idx_fit);
