@@ -96,20 +96,33 @@ flag = 1;  % or 2 depending on your curve direction
 results_raw = ec50(c', zr');
 resultsSS_raw = ec50(c', zssr');
 
+% filepath: \\jupiter.smslab.ucsd.edu\data\sternsonlab\Chemistry\Jesse Patch Data\Code\ephysBrowser_final_v2.m
 % --- Plotting ---
 hfig = figure('Position', [100, 100, 1200, 1000]);
 
+% Raw traces with legend
 subplot(3,2,1); 
-plot(t, b); 
+hold on
+for i = 1:size(b,2)
+    plot(t, b(:,i), 'DisplayName', sprintf('Sweep %d', i));
+end
+hold off
 title(['Raw traces - ' mutationName]); 
 xlabel('Time (s)'); ylabel('pA');
 xline(drugStart, 'r--'); xline(drugEnd, 'r--');
+legend('show'); % Show legend with sweep labels
 
+% Baseline-subtracted traces with legend
 subplot(3,2,2); 
-plot(t, bs); 
+hold on
+for i = 1:size(bs,2)
+    plot(t, bs(:,i), 'DisplayName', sprintf('Sweep %d', i));
+end
+hold off
 title(['Baseline-subtracted - ' mutationName]); 
 xlabel('Time (s)'); ylabel('pA');
 xline(drugStart, 'r--'); xline(drugEnd, 'r--');
+legend('show'); % Show legend with sweep labels
 
 subplot(3,2,3); 
 plot(log10(c), zr, 'ko-','MarkerFaceColor','k');
@@ -118,10 +131,11 @@ title(['Peak Dose Response - ' drugInfo]);
 
 subplot(3,2,4); hold on;
 xFit = logspace(log10(min(c)), log10(max(c)), 100);
-semilogx(c, zr, 'ko-','MarkerFaceColor','k');
-semilogx(xFit, results_raw(1)+(results_raw(2)-results_raw(1))./(1+(results_raw(3)./xFit).^results_raw(4)), '-k');
+semilogx(c, zr, 'ko-','MarkerFaceColor','k', 'DisplayName', 'Data');
+semilogx(xFit, results_raw(1)+(results_raw(2)-results_raw(1))./(1+(results_raw(3)./xFit).^results_raw(4)), '-k', 'DisplayName', 'Fit');
 title(sprintf('Peak EC50 = %.1f uM', results_raw(3)));
 xlabel('Conc (uM)'); ylabel('Response (pA)');
+legend('show'); % Legend for data and fit
 
 subplot(3,2,5); 
 plot(log10(c), zssr, 'ko-','MarkerFaceColor','k');
@@ -129,10 +143,12 @@ xlabel('log[Conc] (uM)'); ylabel('Steady-State pA');
 title(['Steady-State Dose Response - ' drugInfo]);
 
 subplot(3,2,6); hold on;
-semilogx(c, zssr, 'ko-','MarkerFaceColor','k');
-semilogx(xFit, resultsSS_raw(1)+(resultsSS_raw(2)-resultsSS_raw(1))./(1+(resultsSS_raw(3)./xFit).^resultsSS_raw(4)), '-k');
+semilogx(c, zssr, 'ko-','MarkerFaceColor','k', 'DisplayName', 'Data');
+semilogx(xFit, resultsSS_raw(1)+(resultsSS_raw(2)-resultsSS_raw(1))./(1+(resultsSS_raw(3)./xFit).^resultsSS_raw(4)), '-k', 'DisplayName', 'Fit');
 title(sprintf('SS EC50 = %.1f uM', resultsSS_raw(3)));
 xlabel('Conc (uM)'); ylabel('Response (pA)');
+legend('show'); % Legend for data and
+
 
 prompt_cell = {'Enter Cell ID (e.g., Cell 001):'};
 cell_info = inputdlg(prompt_cell, 'Cell Info', [1 50]);
