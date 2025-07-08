@@ -100,29 +100,29 @@ resultsSS_raw = ec50(c', zssr');
 % --- Plotting ---
 hfig = figure('Position', [100, 100, 1200, 1000]);
 
-% Raw traces with legend
+% Raw traces with legend labeled by concentration
 subplot(3,2,1); 
 hold on
 for i = 1:size(b,2)
-    plot(t, b(:,i), 'DisplayName', sprintf('Sweep %d', i));
+    plot(t, b(:,i), 'DisplayName', sprintf('%.2f \\muM', conc(i)));
 end
 hold off
 title(['Raw traces - ' mutationName]); 
 xlabel('Time (s)'); ylabel('pA');
 xline(drugStart, 'r--'); xline(drugEnd, 'r--');
-legend('show'); % Show legend with sweep labels
+legend('show'); % Show legend with concentration labels
 
-% Baseline-subtracted traces with legend
+% Baseline-subtracted traces with legend labeled by concentration
 subplot(3,2,2); 
 hold on
 for i = 1:size(bs,2)
-    plot(t, bs(:,i), 'DisplayName', sprintf('Sweep %d', i));
+    plot(t, bs(:,i), 'DisplayName', sprintf('%.2f \\muM', conc(i)));
 end
 hold off
 title(['Baseline-subtracted - ' mutationName]); 
 xlabel('Time (s)'); ylabel('pA');
 xline(drugStart, 'r--'); xline(drugEnd, 'r--');
-legend('show'); % Show legend with sweep labels
+legend('show'); % Show legend with concentration labels
 
 subplot(3,2,3); 
 plot(log10(c), zr, 'ko-','MarkerFaceColor','k');
@@ -147,7 +147,8 @@ semilogx(c, zssr, 'ko-','MarkerFaceColor','k', 'DisplayName', 'Data');
 semilogx(xFit, resultsSS_raw(1)+(resultsSS_raw(2)-resultsSS_raw(1))./(1+(resultsSS_raw(3)./xFit).^resultsSS_raw(4)), '-k', 'DisplayName', 'Fit');
 title(sprintf('SS EC50 = %.1f uM', resultsSS_raw(3)));
 xlabel('Conc (uM)'); ylabel('Response (pA)');
-legend('show'); % Legend for data and
+legend('show'); % Legend for data and fit
+
 
 
 prompt_cell = {'Enter Cell ID (e.g., Cell 001):'};
