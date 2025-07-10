@@ -1,6 +1,19 @@
 % Filter ATF Data: Lowpass and Notch Options for All Traces
 
 clear; clc;
+
+% --- Prompt for Cell ID, Mutation, and Drug ---
+prompt = {'Enter Cell ID:', 'Enter Mutation:', 'Enter Drug:'};
+dlg_title = 'Input Cell Info';
+num_lines = 1;
+defaultans = {'', '', ''};
+answer = inputdlg(prompt, dlg_title, num_lines, defaultans);
+if isempty(answer)
+    error('No input provided. Script terminated.');
+end
+cell_id = answer{1};
+mutation = answer{2};
+drug = answer{3};
 disp('Select .atf file');
 [filename, pathname] = uigetfile({'*.atf'}, 'Select ATF trace file');
 pathFile = fullfile(pathname, filename);
@@ -61,11 +74,9 @@ for i = 1:4
     subplot(4, 1, i);
     plot(t, data(:, i), 'Color', [0.6 0.6 0.6]); hold on;
     plot(t, filtered_data(:, i), 'r');
-    
     % Vertical lines for drug on/off
     xline(5.5, '--k', 'drug on', 'LabelVerticalAlignment', 'bottom', 'LabelHorizontalAlignment', 'right');
     xline(20.5, '--k', 'drug off', 'LabelVerticalAlignment', 'bottom', 'LabelHorizontalAlignment', 'left');
-    
     title(titles{i}, 'Interpreter', 'tex');
     ylabel('pA');
     if i == 4
@@ -73,3 +84,6 @@ for i = 1:4
     end
     legend('Raw', 'Filtered');
 end
+% Set figure title as Cell ID, Mutation, and Drug
+fig_title = sprintf('%s | %s | %s', cell_id, mutation, drug);
+sgtitle(fig_title, 'FontWeight', 'bold');
