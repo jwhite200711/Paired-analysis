@@ -26,7 +26,7 @@ sr = 10000;              % sampling rate (Hz)
 t = (0:r-1)/sr;          % time vector
 Fs = sr;
 
-%%
+
 Fs = sr;  % 'sr' must be defined earlier in your script
 
 % --- Lowpass filter setup ---
@@ -61,7 +61,6 @@ for i = 1:size(data, 2)
 end
 
 
-%% --- Plot all 4 raw vs filtered traces with custom titles and annotations
 titles = {
     'METH 11.11 \muM', 
     'METH 33.33 \muM', 
