@@ -9,9 +9,16 @@ end
 fullpath = fullfile(path, file);
 T = readtable(fullpath, 'FileType', 'text', 'Delimiter', '\t', 'HeaderLines', 10);
 
+
 %% === GET METADATA ===
-genotype = input('Enter Genotype (e.g., WT, DKO): ', 's');
+% Prompt for genotype using a GUI dialog
+genotype = questdlg('Select Genotype:', 'Genotype Selection', 'WT', 'DKO', 'WT');
+if isempty(genotype)
+    error('No genotype selected');
+end
 pairID   = input('Enter Pair ID (e.g., R1, R2): ', 's');
+cellID_X = input('Enter Cell X ID (e.g., A, B, etc.): ', 's');
+cellID_Y = input('Enter Cell Y ID (e.g., A, B, etc.): ', 's');
 
 
 
@@ -69,10 +76,26 @@ fprintf('Cell X: Max ΔI = %.3f nA, R² = %.3f\n', min(deltaI_X), R2_X);
 fprintf('Cell Y: Max ΔI = %.3f nA, R² = %.3f\n', min(deltaI_Y), R2_Y);
 
 %% === SAVE SUMMARY TO EXCEL ===
-summaryFile = fullfile(path, 'paired_cells_summary.xlsx');
-rowX = table({genotype}, {pairID}, {file}, {'Cell X'}, min(deltaI_X), R2_X, ...
+
+% Save to different summary files and folders based on genotype
+if strcmpi(genotype, 'WT')
+    summaryDir = 'C:\Users\jew052\Desktop\Jesse2\WT';
+    if ~exist(summaryDir, 'dir')
+        mkdir(summaryDir);
+    end
+    summaryFile = fullfile(summaryDir, 'paired_cells_summary_WT.xlsx');
+elseif strcmpi(genotype, 'DKO')
+    summaryDir = 'C:\Users\jew052\Desktop\Jesse2\DKO';
+    if ~exist(summaryDir, 'dir')
+        mkdir(summaryDir);
+    end
+    summaryFile = fullfile(summaryDir, 'paired_cells_summary_DKO.xlsx');
+else
+    summaryFile = fullfile(path, 'paired_cells_summary_OTHER.xlsx');
+end
+rowX = table({genotype}, {pairID}, {file}, {cellID_X}, min(deltaI_X), R2_X, ...
     'VariableNames', {'Genotype', 'Pair', 'File', 'CellID', 'MaxDeltaI', 'R2'});
-rowY = table({genotype}, {pairID}, {file}, {'Cell Y'}, min(deltaI_Y), R2_Y, ...
+rowY = table({genotype}, {pairID}, {file}, {cellID_Y}, min(deltaI_Y), R2_Y, ...
     'VariableNames', {'Genotype', 'Pair', 'File', 'CellID', 'MaxDeltaI', 'R2'});
 
 if isfile(summaryFile)
@@ -89,8 +112,10 @@ T_X = table(deltaV', deltaI_X', 'VariableNames', {'Voltage_mV', 'SteadyState_Del
 T_Y = table(deltaV', deltaI_Y', 'VariableNames', {'Voltage_mV', 'SteadyState_DeltaI_nA'});
 
 safePairID = regexprep(pairID, '[^a-zA-Z0-9_]', '_');
-writetable(T_X, fullfile(path, [safePairID '_CellX_DeltaI.csv']));
-writetable(T_Y, fullfile(path, [safePairID '_CellY_DeltaI.csv']));
+safeCellID_X = regexprep(cellID_X, '[^a-zA-Z0-9_]', '_');
+safeCellID_Y = regexprep(cellID_Y, '[^a-zA-Z0-9_]', '_');
+writetable(T_X, fullfile(path, [safePairID '_' safeCellID_X '_DeltaI.csv']));
+writetable(T_Y, fullfile(path, [safePairID '_' safeCellID_Y '_DeltaI.csv']));
 
 
 %% === PLOT TRACE WITH BASELINE AND STEADY-STATE WINDOWS ===
