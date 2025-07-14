@@ -2,7 +2,7 @@
 samplingRate = 10000;  % Hz
 
 
-[file, path] = uigetfile('*.atf', 'Select ATF file');
+[file, path] = uigetfile('*.atf', 'Select ATF file', 'C:\Users\jew052\Desktop\Jesse2');
 if isequal(file, 0)
     error('No file selected');
 end
@@ -10,7 +10,7 @@ fullpath = fullfile(path, file);
 T = readtable(fullpath, 'FileType', 'text', 'Delimiter', '\t', 'HeaderLines', 10);
 
 
-%% === GET METADATA ===
+
 % Prompt for genotype using a GUI dialog
 genotype = questdlg('Select Genotype:', 'Genotype Selection', 'WT', 'DKO', 'WT');
 if isempty(genotype)
@@ -22,18 +22,18 @@ cellID_Y = input('Enter Cell Y ID (e.g., A, B, etc.): ', 's');
 
 
 
-%% === SET TIME WINDOWS (in ms) ===
+
 timeVec = T{:,1};  % First column is time (in seconds)
 
 y_base_idx = find(timeVec >= 0.031   & timeVec <= 0.531);
 y_step_idx = find(timeVec >= 0.681   & timeVec <= 0.731);
-x_base_idx = find(timeVec >= 0.731   & timeVec <= 1.231);
-x_step_idx = find(timeVec >= 1.381   & timeVec <= 1.431);
+x_base_idx = find(timeVec >= 0.732   & timeVec <= 1.231); 
+x_step_idx = find(timeVec >= 1.381   & timeVec <= 1.431); 
 
 
 
 
-%% === GET SWEEP COLUMNS (INTERLEAVED FORMAT) ===
+
 % Column 1 = Time, columns 2–49 = alternating X1, Y1, X2, Y2, ...
 allCols = T.Properties.VariableNames(2:end);  % Skip time
 
@@ -44,7 +44,7 @@ nSweeps = length(cellX_cols);  % Should be 24
 deltaV = -115:10:115;
 assert(nSweeps == length(deltaV), 'Mismatch between sweeps and voltage steps');
 
-%% === EXTRACT ΔI FOR EACH SWEEP ===
+
 deltaI_X = zeros(1, nSweeps);
 deltaI_Y = zeros(1, nSweeps);
 
@@ -61,7 +61,7 @@ for i = 1:nSweeps
     deltaI_Y(i) = steadyY - baselineY;
 end
 
-%% === FIT LINES & COMPUTE R² ===
+
 pX = polyfit(deltaV, deltaI_X, 1);
 fitX = polyval(pX, deltaV);
 R2_X = 1 - sum((deltaI_X - fitX).^2) / sum((deltaI_X - mean(deltaI_X)).^2);
@@ -72,8 +72,8 @@ R2_Y = 1 - sum((deltaI_Y - fitY).^2) / sum((deltaI_Y - mean(deltaI_Y)).^2);
 
 % Display results
 fprintf('\n✅ Analysis complete for %s (%s)\n', file, pairID);
-fprintf('Cell X: Max ΔI = %.3f nA, R² = %.3f\n', min(deltaI_X), R2_X);
-fprintf('Cell Y: Max ΔI = %.3f nA, R² = %.3f\n', min(deltaI_Y), R2_Y);
+fprintf('Cell X: Max ΔI = %.3f pA, R² = %.3f\n', min(deltaI_X), R2_X);
+fprintf('Cell Y: Max ΔI = %.3f pA, R² = %.3f\n', min(deltaI_Y), R2_Y);
 
 %% === SAVE SUMMARY TO EXCEL ===
 
@@ -93,10 +93,10 @@ elseif strcmpi(genotype, 'DKO')
 else
     summaryFile = fullfile(path, 'paired_cells_summary_OTHER.xlsx');
 end
-rowX = table({genotype}, {pairID}, {file}, {cellID_X}, min(deltaI_X), R2_X, ...
-    'VariableNames', {'Genotype', 'Pair', 'File', 'CellID', 'MaxDeltaI', 'R2'});
-rowY = table({genotype}, {pairID}, {file}, {cellID_Y}, min(deltaI_Y), R2_Y, ...
-    'VariableNames', {'Genotype', 'Pair', 'File', 'CellID', 'MaxDeltaI', 'R2'});
+rowX = table({genotype}, {pairID}, {file}, {fullpath}, {cellID_X}, deltaI_X(1), R2_X, ...
+    'VariableNames', {'Genotype', 'Pair', 'File', 'FilePath', 'CellID', 'MaxDeltaI', 'R2'});
+rowY = table({genotype}, {pairID}, {file}, {fullpath}, {cellID_Y}, deltaI_Y(1), R2_Y, ...
+    'VariableNames', {'Genotype', 'Pair', 'File', 'FilePath', 'CellID', 'MaxDeltaI', 'R2'});
 
 if isfile(summaryFile)
     existing = readtable(summaryFile);
@@ -108,18 +108,15 @@ end
 writetable(summary, summaryFile);
 
 %% === SAVE FULL ΔI TO CSV ===
-T_X = table(deltaV', deltaI_X', 'VariableNames', {'Voltage_mV', 'SteadyState_DeltaI_nA'});
-T_Y = table(deltaV', deltaI_Y', 'VariableNames', {'Voltage_mV', 'SteadyState_DeltaI_nA'});
 
+% Combine Cell X and Cell Y into one table for CSV export
+T_DeltaI = table(deltaV', deltaI_X', deltaI_Y', 'VariableNames', {'Voltage_mV', ['DeltaI_' cellID_X], ['DeltaI_' cellID_Y]});
 safePairID = regexprep(pairID, '[^a-zA-Z0-9_]', '_');
-safeCellID_X = regexprep(cellID_X, '[^a-zA-Z0-9_]', '_');
-safeCellID_Y = regexprep(cellID_Y, '[^a-zA-Z0-9_]', '_');
-writetable(T_X, fullfile(path, [safePairID '_' safeCellID_X '_DeltaI.csv']));
-writetable(T_Y, fullfile(path, [safePairID '_' safeCellID_Y '_DeltaI.csv']));
+writetable(T_DeltaI, fullfile(path, [safePairID '_DeltaI.csv']));
 
 
 %% === PLOT TRACE WITH BASELINE AND STEADY-STATE WINDOWS ===
-sweepNum = 1;  % <-- Change this to view a different sweep
+sweepNum = 24;  % <-- Change this to view a different sweep
 
 traceX = T{:, cellX_cols{sweepNum}};
 traceY = T{:, cellY_cols{sweepNum}};
