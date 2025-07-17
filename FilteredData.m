@@ -20,7 +20,7 @@ pathFile = fullfile(pathname, filename);
 
 
 a = importdata(pathFile, '\t', 11);
-data = a.data(:,2:end);  % exclude time column
+data = a.data(:,2:5);  % exclude time column and only include first 4 columns
 [r, c] = size(data);
 sr = 10000;              % sampling rate (Hz)
 t = (0:r-1)/sr;          % time vector
