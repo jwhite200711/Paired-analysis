@@ -7,7 +7,7 @@ end
 fullpath = fullfile(path, file);
 T = readtable(fullpath, 'FileType', 'text', 'Delimiter', '\t', 'HeaderLines', 10);
 
-%% === METADATA INPUT ===
+
 % Prompt for genotype using a GUI dialog
 genotype = questdlg('Select Genotype:', 'Genotype Selection', 'WT', 'DKO', 'WT');
 if isempty(genotype)
@@ -17,7 +17,7 @@ pairID   = input('Enter Pair ID (e.g., R1, R2): ', 's');
 cellID_X = input('Enter Cell X ID (e.g., A, B, etc.): ', 's');
 cellID_Y = input('Enter Cell Y ID (e.g., A, B, etc.): ', 's');
 
-%% === DATA WINDOW & COLUMN SETUP ===
+
 timeVec = T{:,1};  % First column is time (in seconds)
 
 % Define analysis windows (in seconds)
@@ -34,7 +34,7 @@ nSweeps = length(cellX_cols);  % Should be 24
 deltaV = -115:10:115;
 assert(nSweeps == length(deltaV), 'Mismatch between sweeps and voltage steps');
 
-%% === ANALYSIS & OUTPUT ===
+
 deltaI_X = zeros(1, nSweeps);
 deltaI_Y = zeros(1, nSweeps);
 for i = 1:nSweeps
