@@ -2,11 +2,12 @@
 
 clear; clc;
 
-% --- Prompt for Cell ID, Mutation, and Drug ---
-prompt = {'Enter Cell ID:', 'Enter Mutation:', 'Enter Drug:'};
+
+% --- Prompt for Cell ID, Mutation, Drug, number of sweeps, and concentrations ---
+prompt = {'Enter Cell ID:', 'Enter Mutation:', 'Enter Drug:', 'Number of sweeps:', 'Concentrations (comma-separated, lowest to highest):'};
 dlg_title = 'Input Cell Info';
 num_lines = 1;
-defaultans = {'', '', ''};
+defaultans = {'', '', '', '5', '1.111,3.333,11.111,33.33,100'};
 answer = inputdlg(prompt, dlg_title, num_lines, defaultans);
 if isempty(answer)
     error('No input provided. Script terminated.');
@@ -14,13 +15,18 @@ end
 cell_id = answer{1};
 mutation = answer{2};
 drug = answer{3};
+num_sweeps = str2double(answer{4});
+concs = str2num(answer{5}); %#ok<ST2NM>
+if length(concs) ~= num_sweeps
+    error('Number of concentrations must match number of sweeps.');
+end
+
 disp('Select .atf file');
 [filename, pathname] = uigetfile({'*.atf'}, 'Select ATF trace file');
 pathFile = fullfile(pathname, filename);
 
-
 a = importdata(pathFile, '\t', 11);
-data = a.data(:,2:5);  % exclude time column and only include first 4 columns
+data = a.data(:,2:(1+num_sweeps));  % dynamically select sweeps
 [r, c] = size(data);
 sr = 10000;              % sampling rate (Hz)
 t = (0:r-1)/sr;          % time vector
@@ -61,16 +67,16 @@ for i = 1:size(data, 2)
 end
 
 
-titles = {
-    'METH 11.11 \muM', 
-    'METH 33.33 \muM', 
-    'METH 100 \muM', 
-    'METH 300 \muM'
-};
+
+% --- Dynamic titles based on concentrations ---
+titles = cell(1, num_sweeps);
+for i = 1:num_sweeps
+    titles{i} = sprintf('METH %.3f \muM', concs(i));
+end
 
 figure;
-for i = 1:4
-    subplot(4, 1, i);
+for i = 1:num_sweeps
+    subplot(num_sweeps, 1, i);
     plot(t, data(:, i), 'Color', [0.6 0.6 0.6]); hold on;
     plot(t, filtered_data(:, i), 'r');
     % Vertical lines for drug on/off
@@ -78,7 +84,7 @@ for i = 1:4
     xline(20.5, '--k', 'drug off', 'LabelVerticalAlignment', 'bottom', 'LabelHorizontalAlignment', 'left');
     title(titles{i}, 'Interpreter', 'tex');
     ylabel('pA');
-    if i == 4
+    if i == num_sweeps
         xlabel('Time (s)');
     end
     legend('Raw', 'Filtered');
@@ -86,3 +92,12 @@ end
 % Set figure title as Cell ID, Mutation, and Drug
 fig_title = sprintf('%s | %s | %s', cell_id, mutation, drug);
 sgtitle(fig_title, 'FontWeight', 'bold');
+
+% --- Save figure in same directory as ATF file ---
+[~, baseName, ~] = fileparts(filename);
+figSavePath = fullfile(pathname, [baseName '_filtered_plot.png']);
+saveas(gcf, figSavePath);
+
+% Display the saved figure path in the command window
+fprintf('Filtered figure saved to: %s\n', figSavePath);
+
