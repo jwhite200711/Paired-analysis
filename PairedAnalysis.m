@@ -21,9 +21,9 @@ cellID_Y = input('Enter Cell Y ID (e.g., A, B, etc.): ', 's');
 timeVec = T{:,1};  % First column is time (in seconds)
 
 % Define analysis windows (in seconds)
-y_base_idx = find(timeVec >= 0.331   & timeVec <= 0.531); %changed baseline start from 0.031 to 0.331
+y_base_idx = find(timeVec >= 0.331   & timeVec <= 0.531); 
 y_step_idx = find(timeVec >= 0.681   & timeVec <= 0.731);
-x_base_idx = find(timeVec >= 1.031   & timeVec <= 1.231); %changed baseline from 0.732 to 1.031
+x_base_idx = find(timeVec >= 1.031   & timeVec <= 1.231); 
 x_step_idx = find(timeVec >= 1.381   & timeVec <= 1.431); 
 
 % Get sweep columns (interleaved format)
@@ -95,7 +95,6 @@ T_DeltaI = table(deltaV', deltaI_X', deltaI_Y', 'VariableNames', {'Voltage_mV', 
 safePairID = regexprep(pairID, '[^a-zA-Z0-9_]', '_');
 writetable(T_DeltaI, fullfile(path, [safePairID '_DeltaI.csv']));
 
-%% === PLOTTING ===
 sweepNum = 1;  % <-- Change this to view a different sweep
 traceX = T{:, cellX_cols{sweepNum}};
 traceY = T{:, cellY_cols{sweepNum}};
