@@ -80,14 +80,17 @@ for i = 1:num_sweeps
     plot(t, data(:, i), 'Color', [0.6 0.6 0.6]); hold on;
     plot(t, filtered_data(:, i), 'r');
     % Vertical lines for drug on/off
-    xline(5.5, '--k', 'drug on', 'LabelVerticalAlignment', 'bottom', 'LabelHorizontalAlignment', 'right');
-    xline(20.5, '--k', 'drug off', 'LabelVerticalAlignment', 'bottom', 'LabelHorizontalAlignment', 'left');
+    xline(35.5, '--k', 'METH on', 'LabelVerticalAlignment', 'bottom', 'LabelHorizontalAlignment', 'right');
+    xline(45.5, '--k', 'METH off', 'LabelVerticalAlignment', 'bottom', 'LabelHorizontalAlignment', 'left');
+    % Add cocaine start and end lines
+    xline(6, '--b', 'COC on', 'LabelVerticalAlignment', 'bottom', 'LabelHorizontalAlignment', 'right');
+    xline(21, '--b', 'COC off', 'LabelVerticalAlignment', 'bottom', 'LabelHorizontalAlignment', 'left');
     title(titles{i}, 'Interpreter', 'tex');
     ylabel('pA');
     if i == num_sweeps
         xlabel('Time (s)');
     end
-    legend('Raw', 'Filtered');
+    legend('Raw', 'Filtered', 'Location', 'northeastoutside');
 end
 % Set figure title as Cell ID, Mutation, and Drug
 fig_title = sprintf('%s | %s | %s', cell_id, mutation, drug);
